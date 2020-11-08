@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <string>
 #include <type_traits>
+#include <stack>
+#include <queue>
 
 
 template <typename T>
@@ -14,21 +16,102 @@ void print(const T& cont) {
                                                decltype(*std::begin(cont))
                                                                           >
                                                                            >() ) {
-        for(auto &el : cont)
-        {
+        for(auto &el : cont) {
             std::cout << *el << ' ';
         }
     }
     else {
-        for(auto &el : cont)
-        {
+        for(auto &el : cont) {
             std::cout << el << ' ';
         }
     }
-
     std::cout << '\n';
 }
 
+template<typename F, typename S>
+auto sum(const F& f, const S& s) {
+    if constexpr (std::is_same< std::vector<S>, F>()) {
+        std::vector<S> vs = f;
+        for (auto &el : vs) {
+            el += s;
+        }
+        return vs;
+    }
+    else {
+        return f + s;
+    }
+}
+
+template<typename F>
+void adapter_print(F &f) {
+    if constexpr (std::is_same <std::stack<typename F::value_type>, F> () ||
+                  std::is_same <std::priority_queue<typename F::value_type>, F> () ) {
+        if constexpr ( std::is_pointer <typename F::value_type> ()) {
+            while(!f.empty()) {
+                std::cout << *f.top() << ' ';
+                f.pop();
+            }
+        }
+        else {
+            while (!f.empty()) {
+                std::cout << f.top() << ' ';
+                f.pop();
+            }
+        }
+    }
+    else if constexpr (( std::is_same <std::queue<typename F::value_type>, F> ())) {
+        if constexpr ( std::is_pointer <typename F::value_type> ()) {
+            while (!f.empty()) {
+                std::cout << *f.front() << ' ';
+                f.pop();
+            }
+        }
+        else {
+            while (!f.empty()) {
+                std::cout << f.front() << ' ';
+                f.pop();
+            }
+        }
+    }
+    else {
+        std::cerr << "ERROR TYPE";
+    }
+    std::cout<< '\n';
+}
+
+
+class myFunc{
+public:
+    bool operator() (const std::shared_ptr<std::string>& l, const std::shared_ptr<std::string>& r) const {
+        return *l < *r;
+    }
+};
+
+bool alphaCheck(const std::string str) {
+    for (const auto& ch : str) {
+        if (!isalpha(ch)) return false;
+    }
+    return true;
+}
+
+bool digitCheck(const std::string str) {
+    for (const auto& ch : str) {
+        if (!isdigit(ch)) return false;
+    }
+    return true;
+}
+
+
+size_t findSum(const std::vector<std::shared_ptr<std::string>>& v){
+    size_t res = 0;
+    for (auto &ptr : v) {
+        for (auto& ch : *ptr) {
+            int i = ch - '0';
+            res += i;
+        }
+    }
+    return res;
+}
 
 int main()
 {
@@ -66,10 +149,16 @@ int main()
 /***************************************************************/
 //Задание 2.
     /* Реализуйте шаблон функции сложения двух значений.
-    Если первое слагаемое является вектором, то все элементы вектора нужно увеличить на значение второго параметра. При этом элементы вектора и второй параметр должны быть одного и того же типа.
+    Если первое слагаемое является вектором, то все элементы вектора нужно увеличить на значение второго параметра.
+    При этом элементы вектора и второй параметр должны быть одного и того же типа.
     Подсказки: if constexpr, is_same
     */
     {
+        std::cout << sum(3.5, 5) << '\n';
+        std::vector<int> vi = {1,2,3,4,5};
+        vi = sum(vi, 45);
+        print(vi);
+
 
     }
 
@@ -81,20 +170,58 @@ int main()
     Предусмотрите вывод значений, если в адаптере хранятся указатели.
     */
     {
+        std::stack <int> si;
+        std::queue <int> qi;
+        std::priority_queue <int> pqi;
+        for( size_t i = 0; i < 5; i++) {
+            si.push(i);
+            qi.push(i);
+            pqi.push(i);
+        }
 
+
+       adapter_print(si);
+       adapter_print(qi);
+       adapter_print(pqi);
+
+       int* ar[4] = {new int(1), new int(2), new int(3), new int(4)};
+
+       std::queue <int*> qip;
+
+       for( int i = 0; i < 4; i++) {
+           qip.push(ar[i]);
+       }
+
+       adapter_print(qip);
     }
 
 /***************************************************************/
 //Задание 4.
     {
         //Дан массив элементов типа string
-        std::string strings[] = {"abc", "123", "qwerty", "#$%"};
+        std::string strings[] = {"zzz", "abc", "123", "qwerty", "#$%"};
         //До завершения фрагмента строки должны существовать в единственном экземпляре.
         //Требуется обеспечить манипулирование строками а) без копирования и б) без изменения порядка
         //элементов в массиве!
 
         //В std::set "складываем" по алфавиту обертки для строк, которые содержат только буквы
 
+        auto lamb = [](std::string* sp){sp = nullptr; };
+
+
+        std::set <std::shared_ptr<std::string>, myFunc> alphaStr;
+
+        for(size_t i = 0; i < std::size(strings); i++)
+        {
+            if ( alphaCheck(strings[i])) {
+                alphaStr.insert(std::shared_ptr<std::string>(&strings[i], lamb));
+            }
+        }
+
+        for( auto & el : alphaStr) {
+            std::cout<< *el << ' ';
+        }
+        std::cout << '\n';
 
         /******************************************************************************************/
 
@@ -102,7 +229,20 @@ int main()
         //Выводим на экран
         //Находим сумму
 
-        //std::vector<std::shared_ptr < std::string>>
+        std::vector<std::shared_ptr< std::string>> vecStr;
+
+        for(size_t i = 0; i < std::size(strings); i++)
+        {
+            if ( digitCheck(strings[i])) {
+                vecStr.push_back(std::shared_ptr<std::string>(&strings[i], lamb));
+            }
+        }
+
+        for( auto & el : vecStr) {
+            std::cout<< *el << ' ';
+        }
+
+        std::cout<< "Sum = "<<findSum(vecStr) << '\n';
 
         /******************************************************************************************/
         //сюда "складываем" обертки для строк, которые не содержат ни символов букв, ни символов цифр
