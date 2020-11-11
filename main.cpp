@@ -1,85 +1,12 @@
 #include <iostream>
 #include <memory>
-#include <vector>
 #include <set>
 #include <algorithm>
-#include <string>
 #include <type_traits>
-#include <stack>
-#include <queue>
 #include <cstring>
-
-
-template <typename T>
-void print(const T& cont) {
-    if constexpr (std::is_pointer<
-                                  std::decay_t<
-                                               decltype(*std::begin(cont))
-                                                                          >
-                                                                           >() ) {
-        for(auto &el : cont) {
-            std::cout << *el << ' ';
-        }
-    }
-    else {
-        for(auto &el : cont) {
-            std::cout << el << ' ';
-        }
-    }
-    std::cout << '\n';
-}
-
-template<typename F, typename S>
-auto sum(const F& f, const S& s) {
-    if constexpr (std::is_same< std::vector<S>, F>()) {
-        std::vector<S> vs = f;
-        for (auto &el : vs) {
-            el += s;
-        }
-        return vs;
-    }
-    else {
-        return f + s;
-    }
-}
-
-template<typename F>
-void adapter_print(F &f) {
-    if constexpr (std::is_same <std::stack<typename F::value_type>, F> () ||
-                  std::is_same <std::priority_queue<typename F::value_type>, F> () ) {
-        if constexpr ( std::is_pointer <typename F::value_type> ()) {
-            while(!f.empty()) {
-                std::cout << *f.top() << ' ';
-                f.pop();
-            }
-        }
-        else {
-            while (!f.empty()) {
-                std::cout << f.top() << ' ';
-                f.pop();
-            }
-        }
-    }
-    else if constexpr (( std::is_same <std::queue<typename F::value_type>, F> ())) {
-        if constexpr ( std::is_pointer <typename F::value_type> ()) {
-            while (!f.empty()) {
-                std::cout << *f.front() << ' ';
-                f.pop();
-            }
-        }
-        else {
-            while (!f.empty()) {
-                std::cout << f.front() << ' ';
-                f.pop();
-            }
-        }
-    }
-    else {
-        std::cerr << "ERROR TYPE";
-    }
-    std::cout<< '\n';
-}
-
+#include "MyArray.h"
+#include "print_and_sum.h"
+#include "check_func_for_string.h"
 
 class myFunc{
 public:
@@ -87,27 +14,6 @@ public:
         return *l < *r;
     }
 };
-
-bool alphaCheck(const std::string& str) {
-    for (const auto& ch : str) {
-        if (!isalpha(ch)) return false;
-    }
-    return true;
-}
-
-bool digitCheck(const std::string& str) {
-    for (const auto& ch : str) {
-        if (!isdigit(ch)) return false;
-    }
-    return true;
-}
-
-bool noAlphaNoDig(const std::string str) {
-    for (const auto& ch : str) {
-        if (isdigit(ch) || isalpha(ch)) return false;
-    }
-    return true;
-}
 
 size_t findSum(const std::vector<std::shared_ptr<std::string>>& v) {
     size_t res = 0;
@@ -121,37 +27,6 @@ size_t findSum(const std::vector<std::shared_ptr<std::string>>& v) {
 }
 
 auto lamb = [](std::string* &sp){sp = nullptr; };
-
-constexpr size_t mystrlen(const char* s)
-{
-    return *s ? 1 + mystrlen(s+1) : 0;
-}
-
-
-template<typename T, size_t size> class MyArray {
-    T ar[size]; //как обеспечить инициализацию элементов базового типа по умолчанию нулем?
-public:
-    MyArray() {
-        for ( size_t i = 0; i < size; i++) {
-            ar[i] = T{};
-        }
-    }
-
-    MyArray(const char* str) {
-        for (size_t i = 0; i < size; i++) {
-            ar[i] = str[i];
-        }
-    }
-
-    MyArray(const int* iptr) {
-        for(size_t i = 0; i<size; i++) {
-            ar[i] = iptr[i];
-        }
-    }
-};
-
-    MyArray(const char str[])  -> MyArray<char, 4>;                               // здесь не правильно !!!!!!!!!!!!!!!!!!!!!
-    MyArray(const int intp[]) -> MyArray<int, 3>;
 
 int main()
 {
@@ -170,16 +45,14 @@ int main()
         std::vector <std::string*> vs = {new std::string("aaa"), new std::string("bb"), new std::string("ccc")};
         print(vs);
 
-        for(auto &el : vs)
-        {
+        for (auto &el : vs) {
             delete el;
         }
 
         int* ar[4] = {new int(1), new int(2), new int(3), new int(4)};
         print(ar);
 
-        for(auto &el : ar)
-        {
+        for (auto &el : ar) {
             delete el;
         }
 
@@ -214,7 +87,7 @@ int main()
         std::stack <int> si;
         std::queue <int> qi;
         std::priority_queue <int> pqi;
-        for( size_t i = 0; i < 5; i++) {
+        for (size_t i = 0; i < 5; i++) {
             si.push(i);
             qi.push(i);
             pqi.push(i);
@@ -229,7 +102,7 @@ int main()
 
        std::queue <int*> qip;
 
-       for( int i = 0; i < 4; i++) {
+       for (int i = 0; i < 4; i++) {
            qip.push(ar[i]);
        }
 
@@ -258,8 +131,8 @@ int main()
             }
         }
 
-        for( auto & el : alphaStr) {
-            std::cout<< *el << ' ';
+        for (auto &el : alphaStr) {
+            std::cout << *el << ' ';
         }
         std::cout << '\n';
 
@@ -271,33 +144,32 @@ int main()
 
         std::vector<std::shared_ptr< std::string>> vecDig;
 
-        for(size_t i = 0; i < std::size(strings); i++)
+        for (size_t i = 0; i < std::size(strings); i++)
         {
-            if ( digitCheck(strings[i])) {
+            if (digitCheck(strings[i])) {
                 vecDig.emplace_back(std::shared_ptr<std::string>(&strings[i], lamb));
             }
         }
 
-        for( auto & el : vecDig) {
-            std::cout<< *el << ' ';
+        for (auto &el : vecDig) {
+            std::cout << *el << ' ';
         }
 
-        std::cout<< "Sum = "<<findSum(vecDig) << '\n';
+        std::cout<< "Sum = " << findSum(vecDig) << '\n';
 
         /******************************************************************************************/
         //сюда "складываем" обертки для строк, которые не содержат ни символов букв, ни символов цифр
         //и просто выводим
         std::vector<std::shared_ptr< std::string>> vecNoCharNoDig;
 
-        for(size_t i = 0; i < std::size(strings); i++)
-        {
-            if ( noAlphaNoDig(strings[i])) {
+        for (size_t i = 0; i < std::size(strings); i++) {
+            if (noAlphaNoDig(strings[i])) {
                 vecNoCharNoDig.emplace_back(std::shared_ptr<std::string>(&strings[i], lamb));
             }
         }
 
-        for( auto & el : vecNoCharNoDig) {
-            std::cout<< *el << ' ';
+        for (auto & el : vecNoCharNoDig) {
+            std::cout << *el << ' ';
         }
         std::cout << '\n';
 
@@ -309,7 +181,7 @@ int main()
     {
         //Дано:
         std::string ar[] = {"Emy","AHello", "BWorld"};
-        std::vector < std::shared_ptr<std::string>> v = {std::make_shared<std::string>("Cgood"), std::make_shared<std::string>("Dbye")};
+        std::vector <std::shared_ptr<std::string>> v = {std::make_shared<std::string>("Cgood"), std::make_shared<std::string>("Dbye")};
 
         for (auto &el : ar) {
             v.emplace_back(std::shared_ptr<std::string>(&el, lamb));
@@ -385,13 +257,14 @@ template<typename T, size_t size> class MyArray
 //Требуется обеспечить работоспособность приведенных примеров использования.
     {
         MyArray<int, 5> ar1;//MyArray<int,5>
-        MyArray ar2("ABC"); //MyArray<char,4>
+        ar1.print();
+
+        MyArray ar2{"ABC"}; //MyArray<char,4>
+        ar2.print();
+
         int ar[] = { 1,2,3 };
         MyArray ar3{ ar };
+        ar3.print();
 
     }
-
-
-
-
 }
