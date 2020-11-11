@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <stack>
 #include <queue>
+#include <cstring>
 
 
 template <typename T>
@@ -87,22 +88,28 @@ public:
     }
 };
 
-bool alphaCheck(const std::string str) {
+bool alphaCheck(const std::string& str) {
     for (const auto& ch : str) {
         if (!isalpha(ch)) return false;
     }
     return true;
 }
 
-bool digitCheck(const std::string str) {
+bool digitCheck(const std::string& str) {
     for (const auto& ch : str) {
         if (!isdigit(ch)) return false;
     }
     return true;
 }
 
+bool noAlphaNoDig(const std::string str) {
+    for (const auto& ch : str) {
+        if (isdigit(ch) || isalpha(ch)) return false;
+    }
+    return true;
+}
 
-size_t findSum(const std::vector<std::shared_ptr<std::string>>& v){
+size_t findSum(const std::vector<std::shared_ptr<std::string>>& v) {
     size_t res = 0;
     for (auto &ptr : v) {
         for (auto& ch : *ptr) {
@@ -112,6 +119,39 @@ size_t findSum(const std::vector<std::shared_ptr<std::string>>& v){
     }
     return res;
 }
+
+auto lamb = [](std::string* &sp){sp = nullptr; };
+
+constexpr size_t mystrlen(const char* s)
+{
+    return *s ? 1 + mystrlen(s+1) : 0;
+}
+
+
+template<typename T, size_t size> class MyArray {
+    T ar[size]; //как обеспечить инициализацию элементов базового типа по умолчанию нулем?
+public:
+    MyArray() {
+        for ( size_t i = 0; i < size; i++) {
+            ar[i] = T{};
+        }
+    }
+
+    MyArray(const char* str) {
+        for (size_t i = 0; i < size; i++) {
+            ar[i] = str[i];
+        }
+    }
+
+    MyArray(const int* iptr) {
+        for(size_t i = 0; i<size; i++) {
+            ar[i] = iptr[i];
+        }
+    }
+};
+
+    MyArray(const char str[])  -> MyArray<char, 4>;                               // здесь не правильно !!!!!!!!!!!!!!!!!!!!!
+    MyArray(const int intp[]) -> MyArray<int, 3>;
 
 int main()
 {
@@ -126,6 +166,7 @@ int main()
     Подсказки: if constexpr
     */
     {
+
         std::vector <std::string*> vs = {new std::string("aaa"), new std::string("bb"), new std::string("ccc")};
         print(vs);
 
@@ -206,7 +247,6 @@ int main()
 
         //В std::set "складываем" по алфавиту обертки для строк, которые содержат только буквы
 
-        auto lamb = [](std::string* sp){sp = nullptr; };
 
 
         std::set <std::shared_ptr<std::string>, myFunc> alphaStr;
@@ -229,25 +269,37 @@ int main()
         //Выводим на экран
         //Находим сумму
 
-        std::vector<std::shared_ptr< std::string>> vecStr;
+        std::vector<std::shared_ptr< std::string>> vecDig;
 
         for(size_t i = 0; i < std::size(strings); i++)
         {
             if ( digitCheck(strings[i])) {
-                vecStr.push_back(std::shared_ptr<std::string>(&strings[i], lamb));
+                vecDig.emplace_back(std::shared_ptr<std::string>(&strings[i], lamb));
             }
         }
 
-        for( auto & el : vecStr) {
+        for( auto & el : vecDig) {
             std::cout<< *el << ' ';
         }
 
-        std::cout<< "Sum = "<<findSum(vecStr) << '\n';
+        std::cout<< "Sum = "<<findSum(vecDig) << '\n';
 
         /******************************************************************************************/
         //сюда "складываем" обертки для строк, которые не содержат ни символов букв, ни символов цифр
         //и просто выводим
+        std::vector<std::shared_ptr< std::string>> vecNoCharNoDig;
 
+        for(size_t i = 0; i < std::size(strings); i++)
+        {
+            if ( noAlphaNoDig(strings[i])) {
+                vecNoCharNoDig.emplace_back(std::shared_ptr<std::string>(&strings[i], lamb));
+            }
+        }
+
+        for( auto & el : vecNoCharNoDig) {
+            std::cout<< *el << ' ';
+        }
+        std::cout << '\n';
 
     }
 
@@ -256,16 +308,26 @@ int main()
 //Задание 5.
     {
         //Дано:
-        std::string ar[] = {"my","Hello", "World"};
-        std::vector < std::shared_ptr<std::string>> v = {std::make_shared<std::string>("good"), std::make_shared<std::string>("bye")};
+        std::string ar[] = {"Emy","AHello", "BWorld"};
+        std::vector < std::shared_ptr<std::string>> v = {std::make_shared<std::string>("Cgood"), std::make_shared<std::string>("Dbye")};
+
+        for (auto &el : ar) {
+            v.emplace_back(std::shared_ptr<std::string>(&el, lamb));
+        }
 
 
 
         //а) Требуется добавить в вектор обертки для элементов массива, НЕ копируя элементы массива!
         //б) Отсортировать вектор по алфавиту и вывести на экран
-        //в) Обеспечить корректное освобождение памяти
 
+        std::sort(v.begin(), v.end(), myFunc());
 
+        for (auto &el : v) {
+            std::cout<< *el << ' ';
+        }
+        std::cout << '\n';
+
+        //в) Обеспечить корректное освобождение памяти              вроде и корректно !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     }
     /***************************************************************/
@@ -319,16 +381,16 @@ template<typename T, size_t size> class MyArray
     };
 
 */
-/*
+
 //Требуется обеспечить работоспособность приведенных примеров использования.
     {
         MyArray<int, 5> ar1;//MyArray<int,5>
-        MyArray ar2{"ABC"}; //MyArray<char,4>
+        MyArray ar2("ABC"); //MyArray<char,4>
         int ar[] = { 1,2,3 };
         MyArray ar3{ ar };
 
     }
-*/
+
 
 
 
