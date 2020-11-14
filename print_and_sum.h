@@ -39,10 +39,10 @@ auto sum(const F& f, const S& s) {
     }
 }
 
-template<typename F>
+template<typename F>        //fixed
 void adapter_print(F &f) {
-    if constexpr (std::is_same <std::stack<typename F::value_type>, F> () ||
-                  std::is_same <std::priority_queue<typename F::value_type>, F> () ) {
+    if constexpr (std::is_same <std::stack<typename F::value_type, typename F::container_type>, F> () ||
+                  std::is_same <std::priority_queue<typename F::value_type, typename F::container_type>, F> () ) {
         if constexpr ( std::is_pointer <typename F::value_type> ()) {
             while(!f.empty()) {
                 std::cout << *f.top() << ' ';
@@ -56,7 +56,7 @@ void adapter_print(F &f) {
             }
         }
     }
-    else if constexpr (( std::is_same <std::queue<typename F::value_type>, F> ())) {
+    else if constexpr (( std::is_same <std::queue<typename F::value_type, typename F::container_type>, F> ())) {
         if constexpr ( std::is_pointer <typename F::value_type> ()) {
             while (!f.empty()) {
                 std::cout << *f.front() << ' ';

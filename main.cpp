@@ -7,6 +7,7 @@
 #include "MyArray.h"
 #include "print_and_sum.h"
 #include "check_func_for_string.h"
+#include "human.h"
 
 class myFunc{
 public:
@@ -26,7 +27,7 @@ size_t findSum(const std::vector<std::shared_ptr<std::string>>& v) {
     return res;
 }
 
-auto lamb = [](std::string* &sp){sp = nullptr; };
+  auto lamb = [](std::string* &sp){sp = nullptr; };
 
 int main()
 {
@@ -122,6 +123,7 @@ int main()
 
 
 
+
         std::set <std::shared_ptr<std::string>, myFunc> alphaStr;
 
         for(size_t i = 0; i < std::size(strings); i++)
@@ -147,7 +149,7 @@ int main()
         for (size_t i = 0; i < std::size(strings); i++)
         {
             if (digitCheck(strings[i])) {
-                vecDig.emplace_back(std::shared_ptr<std::string>(&strings[i], lamb));
+                vecDig.emplace_back(&strings[i], lamb);
             }
         }
 
@@ -164,7 +166,7 @@ int main()
 
         for (size_t i = 0; i < std::size(strings); i++) {
             if (noAlphaNoDig(strings[i])) {
-                vecNoCharNoDig.emplace_back(std::shared_ptr<std::string>(&strings[i], lamb));
+                vecNoCharNoDig.emplace_back(&strings[i], lamb);
             }
         }
 
@@ -181,15 +183,17 @@ int main()
     {
         //Дано:
         std::string ar[] = {"Emy","AHello", "BWorld"};
-        std::vector <std::shared_ptr<std::string>> v = {std::make_shared<std::string>("Cgood"), std::make_shared<std::string>("Dbye")};
-
-        for (auto &el : ar) {
-            v.emplace_back(std::shared_ptr<std::string>(&el, lamb));
-        }
 
 
 
         //а) Требуется добавить в вектор обертки для элементов массива, НЕ копируя элементы массива!
+
+        std::vector <std::shared_ptr<std::string>> v = {std::make_shared<std::string>("Cgood"), std::make_shared<std::string>("Dbye")};
+
+        for (auto &el : ar) {
+            v.emplace_back(&el, lamb);
+        }
+
         //б) Отсортировать вектор по алфавиту и вывести на экран
 
         std::sort(v.begin(), v.end(), myFunc());
@@ -199,7 +203,7 @@ int main()
         }
         std::cout << '\n';
 
-        //в) Обеспечить корректное освобождение памяти              вроде и корректно !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //в) Обеспечить корректное освобождение
 
     }
     /***************************************************************/
@@ -220,21 +224,27 @@ int main()
         //Ввести возможность распечатать генеалогическое дерево для указанного индивидума
 
     {
-        //История должна с кого-то начинаться => "Жили-были дед да баба, например, Адам и Ева"
-        //(то есть на самом деле два деда и две бабы):
 
 
-        //std::shared_ptr<human> grandM1(new human("Eva"));
-        //...
+        std::shared_ptr<human> a(new human("0"));
+        std::shared_ptr<human> aa(new human("00"));
 
-        //у них появились дети - child():
+        auto b = human::child("1", a, aa);
 
+        std::shared_ptr<human> aaa(new human("000"));
+        std::shared_ptr<human> aaaa(new human("0000"));
 
-        //а у детей в свою очередь свои дети:
+        auto bb = human::child("11", aaa, aaaa);
 
+        auto c = human::child("2", b, bb);
 
-        //...
+        std::shared_ptr<human> cc(new human ("22"));
 
+        auto d = human::child("3", c, cc);
+
+        bb->printTree();
+        //d->printTree();
+        std::cout << '\n';
     }
 
 
@@ -257,14 +267,14 @@ template<typename T, size_t size> class MyArray
 //Требуется обеспечить работоспособность приведенных примеров использования.
     {
         MyArray<int, 5> ar1;//MyArray<int,5>
-        ar1.print();
+        //ar1.print();
 
         MyArray ar2{"ABC"}; //MyArray<char,4>
-        ar2.print();
+        //ar2.print();
 
         int ar[] = { 1,2,3 };
         MyArray ar3{ ar };
-        ar3.print();
+        //ar3.print();
 
     }
 }
